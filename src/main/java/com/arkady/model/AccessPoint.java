@@ -104,7 +104,8 @@ public class AccessPoint extends Station {
 
     private void sendSswFeedback(SswFrame sswFrame, String initiatorStationId) {
         if(Utils.enoughToTransmit(SswFrame.SIZE, sswFrame.slsSlotEndTime, Constants.CONTROL_PHY_SPEED)) {
-            System.out.println("AP sends SSW Feedback via: sector " + bestTransmittedConnections.get(initiatorStationId).sectorNumber);
+            System.out.println(getStationId() + " sends SSW Feedback via: sector " + bestTransmittedConnections.get(initiatorStationId).sectorNumber);
+
             SswFrame sswFeedback = new SswFrame(
                     bestTransmittedConnections.get(initiatorStationId).sectorNumber,
                     bestReceivedConnections.get(initiatorStationId),
@@ -121,7 +122,7 @@ public class AccessPoint extends Station {
             receivingStation.receiveSswFeedback(sswFeedback);
             transmitting.set(false);
 
-            //Confirmation for the transmit connection
+            //Confirmation for the AP transmit connection
             bestTransmittedConnections.get(initiatorStationId).confirmed.set(true);
         }
     }
@@ -144,7 +145,5 @@ public class AccessPoint extends Station {
         Integer initiatorSectorNumber = sswFrame.initiatorSectorNumber;
 
         receiving.set(false);
-
-        System.out.println(getStationId() + " received SSW Ack: initiator sector " + initiatorSectorNumber);
     }
 }

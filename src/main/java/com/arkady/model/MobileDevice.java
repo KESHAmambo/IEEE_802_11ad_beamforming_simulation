@@ -39,16 +39,22 @@ public class MobileDevice extends Station {
             waitForNewAbftPeriod();
 
             Connection apConnection = bestReceivedConnections.get(accessPoint.getStationId());
-            System.out.println(getStationId() + " position changed: " + positionChanged.get() +
-                    ", AP new connection: " + apConnection.newConnection.get());
             if(positionChanged.get()) {
                 //возможно, надо перенести за подтверждение
+                bestTransmittedConnections.clear();
+                accessPoint.bestReceivedConnections.remove(getStationId());
                 positionChanged.set(false);
-                apConnection.newConnection.set(false);
+//                apConnection.newConnection.set(false);
+                System.out.println(getStationId() + " position changed, sending SSW frames to all sectors");
                 sendSswFrames(true);
-            } else if(apConnection.newConnection.get()) {
+            } else if(!bestTransmittedConnections.get(accessPoint.getStationId()).confirmed.get()) {
+                System.out.println(getStationId() + " unconfirmed connection, sending SSW frames to all sectors");
+                sendSswFrames(true);
+            } else if(!apConnection.confirmed.get()) {
                 //возможно, надо перенести за подтверждение
-                apConnection.newConnection.set(false);
+//                apConnection.newConnection.set(false);
+                System.out.println(getStationId() +
+                        " unconfirmed AP connection, sending SSW frames to best known 'to AP' transmit sector");
                 sendSswFrames(false);
             }
 
@@ -64,12 +70,12 @@ public class MobileDevice extends Station {
                 slotNumber * SswFrame.SLS_SLOT_DURATION;
         long chosenSlsSlotEndTime = chosenSlsSlotStartTime + SswFrame.SLS_SLOT_DURATION;
 
-        System.out.println(getStationId() + "waiting SLS slot: current " + System.currentTimeMillis() +
+        System.out.println(getStationId() + " waiting SLS slot: current " + System.currentTimeMillis() +
                 ", sls start " + chosenSlsSlotStartTime + ", sls end " + chosenSlsSlotEndTime);
 
         waitForChosenSlsSlotPeriod(chosenSlsSlotStartTime);
 
-        System.out.println(getStationId() + "ended waiting SLS slot: current " + System.currentTimeMillis() +
+        System.out.println(getStationId() + " ended waiting SLS slot: current " + System.currentTimeMillis() +
                 ", sls start " + chosenSlsSlotStartTime + ", sls end " + chosenSlsSlotEndTime);
 
         if(toEachSector) {
@@ -115,13 +121,16 @@ public class MobileDevice extends Station {
         bestTransmittedConnections.put(initiatorStationId, sswFrame.bestReceivedConnection);
         receiving.set(false);
 
-        System.out.println(getStationId() + " received SSW Feedback: initiator sector " + initiatorSectorNumber);
-
         sendSswAck(sswFrame, initiatorStationId);
     }
 
     private void sendSswAck(SswFrame sswFrame, String initiatorStationId) {
         if(Utils.enoughToTransmit(SswFrame.SIZE, sswFrame.slsSlotEndTime, Constants.CONTROL_PHY_SPEED)) {
+            Connection bestTransmitConnection = sswFrame.bestReceivedConnection;
+
+            System.out.println(getStationId() + " sends SSW ACK via: sector " +
+                    bestTransmitConnection.sectorNumber);
+
             SswFrame sswAck = new SswFrame(
                     bestTransmittedConnections.get(initiatorStationId).sectorNumber,
                     bestReceivedConnections.get(initiatorStationId),
@@ -138,8 +147,8 @@ public class MobileDevice extends Station {
             receivingStation.receiveSswAck(sswAck);
             transmitting.set(false);
 
-            //Confirmation for the transmit connection
-            sswFrame.bestReceivedConnection.confirmed.set(true);
+            //Confirmation for the mobile station transmit connection
+            bestTransmitConnection.confirmed.set(true);
         }
     }
 
