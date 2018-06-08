@@ -14,6 +14,7 @@ public class Connection {
     public final Integer sectorNumber;
     public AtomicBoolean newConnection = new AtomicBoolean(true);
     public AtomicBoolean confirmed = new AtomicBoolean(false);
+    public int beaconIntervalNumber;
 
     public Connection(int sectorNumber) {
         this.sectorNumber = sectorNumber;

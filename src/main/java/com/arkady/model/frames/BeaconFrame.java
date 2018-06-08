@@ -13,7 +13,8 @@ public class BeaconFrame extends Frame {
 
     // in micro seconds
     public static final int BTI_DURATION = 3100;
-    public static final int ABFT_DURATION = 400; //
+    public static final int SLS_SLOTS = 4;
+    public static final int ABFT_DURATION = SswFrame.SLS_SLOT_DURATION * SLS_SLOTS; //
     public static final int ATI_DURATION = 2000;
 
     public final long beaconIntervalStartTime;
@@ -23,6 +24,7 @@ public class BeaconFrame extends Frame {
     public final long dtiStartTime;
     public final String initiatorStationId;
     public final int sectorNumber;
+    public final int beaconIntervalNumber;
 
     public BeaconFrame(
             long beaconIntervalStartTime,
@@ -31,7 +33,8 @@ public class BeaconFrame extends Frame {
             long atiStartTime,
             long dtiStartTime,
             String initiatorStationId,
-            int sectorNumber) {
+            int sectorNumber,
+            int beaconIntervalNumber) {
         this.beaconIntervalStartTime = beaconIntervalStartTime;
         this.beaconIntervalEndTime = beaconIntervalEndTime;
         this.abftStartTime = abftStartTime;
@@ -39,5 +42,6 @@ public class BeaconFrame extends Frame {
         this.dtiStartTime = dtiStartTime;
         this.initiatorStationId = initiatorStationId;
         this.sectorNumber = sectorNumber;
+        this.beaconIntervalNumber = beaconIntervalNumber;
     }
 }

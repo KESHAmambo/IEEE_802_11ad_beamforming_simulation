@@ -34,4 +34,16 @@ public class Utils {
             e.printStackTrace();
         }
     }
+
+    public static void waitTillTime(long timeToWait) {
+        long currentTime = System.currentTimeMillis();
+        while(currentTime < timeToWait) {
+            try {
+                sleep(1);
+                currentTime = System.currentTimeMillis();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

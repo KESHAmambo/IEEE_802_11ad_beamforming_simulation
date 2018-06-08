@@ -34,10 +34,24 @@ public class AccessPoint extends Station {
         while(!simulationService.ended.get()) {
             beaconIntervalsCount = sendBeacons(beaconIntervalsCount);
 
+            resetSlsSlotsCollisions();
+
             awaitBarrier();
         }
 
         System.out.println(getStationId() + " finished");
+    }
+
+    private void resetSlsSlotsCollisions() {
+        for(int slotNumber = 0; slotNumber < BeaconFrame.SLS_SLOTS; slotNumber++) {
+            resetCollisionAfterNextSlsSlot(slotNumber);
+        }
+    }
+
+    private void resetCollisionAfterNextSlsSlot(int slotNumber) {
+        long slsSlotEndTime = currentBeaconFrame.abftStartTime + SswFrame.SLS_SLOT_DURATION * slotNumber;
+        Utils.waitTillTime(slsSlotEndTime);
+        receiving.set(0);
     }
 
     private Integer sendBeacons(Integer beaconIntervalsCount) {
@@ -58,12 +72,13 @@ public class AccessPoint extends Station {
                         atiStartTime,
                         dtiStartTime,
                         getStationId(),
-                        sectorNumber);
+                        sectorNumber,
+                        beaconIntervalsCount);
 
                 SimulationService.stations.entrySet().stream().filter(entry -> !entry.getKey().equals(getStationId())).forEach(entry -> {
                     Station station = entry.getValue();
                     transmitting.set(true);
-                    station.receiving.set(true);
+                    station.receiving.incrementAndGet();
                 });
 
                 Utils.waitTillTransmissionEnd(BeaconFrame.SIZE, Constants.CONTROL_PHY_SPEED);
@@ -80,25 +95,32 @@ public class AccessPoint extends Station {
 
     @Override
     public void receiveSswFrame(SswFrame sswFrame) {
-        String initiatorStationId = sswFrame.initiatorStationId;
-        Integer initiatorSectorNumber = sswFrame.initiatorSectorNumber;
+        if(receiving.get() == 1) {
+            String initiatorStationId = sswFrame.initiatorStationId;
+            Integer initiatorSectorNumber = sswFrame.initiatorSectorNumber;
 
-        bestTransmittedConnections.put(initiatorStationId, sswFrame.bestReceivedConnection);
+            bestTransmittedConnections.put(initiatorStationId, sswFrame.bestReceivedConnection);
 
-        Connection receivedConnection = BeaconIntervalBarrierAction.connections.get(initiatorStationId)
-                .get(getStationId()).get(initiatorSectorNumber);
+            Connection receivedConnection = BeaconIntervalBarrierAction.connections.get(initiatorStationId)
+                    .get(getStationId()).get(initiatorSectorNumber);
 
-        if(!bestReceivedConnections.containsKey(initiatorStationId)
-                || bestReceivedConnections.get(initiatorStationId).power < receivedConnection.power) {
-            bestReceivedConnections.put(initiatorStationId, receivedConnection);
-        }
-        receiving.set(false);
+            if(!bestReceivedConnections.containsKey(initiatorStationId)
+                    || bestReceivedConnections.get(initiatorStationId).power < receivedConnection.power) {
+                bestReceivedConnections.put(initiatorStationId, receivedConnection);
+            }
+            receiving.decrementAndGet();
 
-        System.out.println(getStationId() + " received SSW frame: initiator sector " + initiatorSectorNumber +
-                ", power = " + receivedConnection.power);
+            System.out.println(getStationId() +
+                    " received SSW frame: initiator sector " + initiatorSectorNumber +
+                    ", power = " + receivedConnection.power);
 
-        if(sswFrame.lastSector) {
-            sendSswFeedback(sswFrame, initiatorStationId);
+            if(sswFrame.lastSector) {
+                sendSswFeedback(sswFrame, initiatorStationId);
+            }
+        } else {
+            System.out.println(getStationId() + " receiving collision: " +
+                    sswFrame.initiatorStationId +
+                    " SSW frame from sector " + sswFrame.initiatorSectorNumber);
         }
     }
 
@@ -115,7 +137,7 @@ public class AccessPoint extends Station {
             Station receivingStation = SimulationService.stations.get(initiatorStationId);
 
             transmitting.set(true);
-            receivingStation.receiving.set(true);
+            receivingStation.receiving.incrementAndGet();
 
             Utils.waitTillTransmissionEnd(SswFrame.SIZE, Constants.CONTROL_PHY_SPEED);
 
@@ -144,6 +166,6 @@ public class AccessPoint extends Station {
         String initiatorStationId = sswFrame.initiatorStationId;
         Integer initiatorSectorNumber = sswFrame.initiatorSectorNumber;
 
-        receiving.set(false);
+        receiving.decrementAndGet();
     }
 }

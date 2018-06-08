@@ -9,6 +9,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by abara on 13.05.2018.
@@ -20,8 +21,7 @@ public abstract class Station extends Thread {
     public final Integer numberOfSectors;
 
     public AtomicBoolean transmitting = new AtomicBoolean(false);
-    public AtomicBoolean receiving = new AtomicBoolean(false);
-    public AtomicBoolean receivingCollision = new AtomicBoolean(false);
+    public AtomicInteger receiving = new AtomicInteger(0);
 
     public AtomicBoolean positionChanged = new AtomicBoolean(false);
     public volatile BeaconFrame currentBeaconFrame;

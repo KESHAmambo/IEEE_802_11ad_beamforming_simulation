@@ -38,21 +38,20 @@ public class MobileDevice extends Station {
 
             waitForNewAbftPeriod();
 
-            Connection apConnection = bestReceivedConnections.get(accessPoint.getStationId());
+            Connection apReceiveConnection = bestReceivedConnections.get(accessPoint.getStationId());
+            Connection apTransmitConnection = bestTransmittedConnections.get(accessPoint.getStationId());
             if(positionChanged.get()) {
                 //возможно, надо перенести за подтверждение
                 bestTransmittedConnections.clear();
                 accessPoint.bestReceivedConnections.remove(getStationId());
                 positionChanged.set(false);
-//                apConnection.newConnection.set(false);
                 System.out.println(getStationId() + " position changed, sending SSW frames to all sectors");
                 sendSswFrames(true);
-            } else if(!bestTransmittedConnections.get(accessPoint.getStationId()).confirmed.get()) {
+            } else if(apTransmitConnection == null ||
+                    !apTransmitConnection.confirmed.get()) {
                 System.out.println(getStationId() + " unconfirmed connection, sending SSW frames to all sectors");
                 sendSswFrames(true);
-            } else if(!apConnection.confirmed.get()) {
-                //возможно, надо перенести за подтверждение
-//                apConnection.newConnection.set(false);
+            } else if(!apReceiveConnection.confirmed.get()) {
                 System.out.println(getStationId() +
                         " unconfirmed AP connection, sending SSW frames to best known 'to AP' transmit sector");
                 sendSswFrames(false);
@@ -70,13 +69,14 @@ public class MobileDevice extends Station {
                 slotNumber * SswFrame.SLS_SLOT_DURATION;
         long chosenSlsSlotEndTime = chosenSlsSlotStartTime + SswFrame.SLS_SLOT_DURATION;
 
-        System.out.println(getStationId() + " waiting SLS slot: current " + System.currentTimeMillis() +
+        System.out.println(getStationId() + " waiting SLS slot " + slotNumber +
+                ": current " + System.currentTimeMillis() +
                 ", sls start " + chosenSlsSlotStartTime + ", sls end " + chosenSlsSlotEndTime);
 
-        waitForChosenSlsSlotPeriod(chosenSlsSlotStartTime);
+        // Waiting for chosen SLS slot
+        Utils.waitTillTime(chosenSlsSlotStartTime);
 
-        System.out.println(getStationId() + " ended waiting SLS slot: current " + System.currentTimeMillis() +
-                ", sls start " + chosenSlsSlotStartTime + ", sls end " + chosenSlsSlotEndTime);
+        System.out.println(getStationId() + " ended waiting SLS slot " + slotNumber);
 
         if(toEachSector) {
             for(int sectorNumber = 0; sectorNumber < numberOfSectors; sectorNumber++) {
@@ -99,7 +99,7 @@ public class MobileDevice extends Station {
                     chosenSlsSlotEndTime);
 
             transmitting.set(true);
-            accessPoint.receiving.set(true);
+            accessPoint.receiving.incrementAndGet();
 
             Utils.waitTillTransmissionEnd(SswFrame.SIZE, Constants.CONTROL_PHY_SPEED);
 
@@ -119,7 +119,7 @@ public class MobileDevice extends Station {
         Integer initiatorSectorNumber = sswFrame.initiatorSectorNumber;
 
         bestTransmittedConnections.put(initiatorStationId, sswFrame.bestReceivedConnection);
-        receiving.set(false);
+        receiving.decrementAndGet();
 
         sendSswAck(sswFrame, initiatorStationId);
     }
@@ -140,7 +140,7 @@ public class MobileDevice extends Station {
             Station receivingStation = SimulationService.stations.get(initiatorStationId);
 
             transmitting.set(true);
-            receivingStation.receiving.set(true);
+            receivingStation.receiving.incrementAndGet();
 
             Utils.waitTillTransmissionEnd(SswFrame.SIZE, Constants.CONTROL_PHY_SPEED);
 
@@ -158,14 +158,16 @@ public class MobileDevice extends Station {
     }
 
     private long chooseSlsSlot() {
-        double rand = Math.random() * 8;
+        double rand = Math.random() * (BeaconFrame.SLS_SLOTS -1);
         return Math.round(rand);
     }
 
     private void waitForNewAbftPeriod() {
         if(currentBeaconFrame != null) {
-            System.out.println(getStationId() + " waiting for new A-BFT, current: " + System.currentTimeMillis() +
-                    ", start: " + currentBeaconFrame.abftStartTime + ", Beacon end: " + currentBeaconFrame.beaconIntervalEndTime);
+            System.out.println(getStationId() +
+                    " waiting for new A-BFT, current: " + System.currentTimeMillis() +
+                    ", start: " + currentBeaconFrame.abftStartTime +
+                    ", Beacon end: " + currentBeaconFrame.beaconIntervalEndTime);
         }
 
         long currentTime = System.currentTimeMillis();
@@ -184,24 +186,11 @@ public class MobileDevice extends Station {
                 ", start: " + currentBeaconFrame.abftStartTime + ", Beacon end: " + currentBeaconFrame.beaconIntervalEndTime);
     }
 
-    private void waitForChosenSlsSlotPeriod(long chosenSlsSlotStartTime) {
-        long currentTime = System.currentTimeMillis();
-        while(currentTime < chosenSlsSlotStartTime) {
-            try {
-                sleep(1);
-                currentTime = System.currentTimeMillis();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-
     @Override
     public void receiveBeacon(BeaconFrame beaconFrame) {
         String initiatorStationId = beaconFrame.initiatorStationId;
         Integer initiatorSectorNumber = beaconFrame.sectorNumber;
+        int beaconIntervalNumber = beaconFrame.beaconIntervalNumber;
 
         if(accessPoint == null) {
             accessPoint = (AccessPoint) SimulationService.stations.get(initiatorStationId);
@@ -210,18 +199,19 @@ public class MobileDevice extends Station {
 
         Connection receivedConnection = BeaconIntervalBarrierAction.connections.get(initiatorStationId)
                 .get(getStationId()).get(initiatorSectorNumber);
+        receivedConnection.beaconIntervalNumber = beaconIntervalNumber;
 
+        Connection bestReceivedConnectionFromInitiator = bestReceivedConnections.get(initiatorStationId);
         if(!bestReceivedConnections.containsKey(initiatorStationId)
-                || accessPoint.positionChanged.get()
+                || bestReceivedConnectionFromInitiator.beaconIntervalNumber < beaconIntervalNumber
                 || bestReceivedConnections.get(initiatorStationId).power < receivedConnection.power) {
             bestReceivedConnections.put(initiatorStationId, receivedConnection);
-            accessPoint.positionChanged.set(false);
         }
 
         System.out.println(getStationId() + " received Beacon: sector " + beaconFrame.sectorNumber +
                 ", power = " + receivedConnection.power);
 
         currentBeaconFrame = beaconFrame;
-        receiving.set(false);
+        receiving.decrementAndGet();
     }
 }
