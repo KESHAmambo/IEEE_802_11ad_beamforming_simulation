@@ -18,6 +18,15 @@ public class Connection {
 
     public Connection(int sectorNumber) {
         this.sectorNumber = sectorNumber;
-        this.power = minPower + (maxPower - minPower) * Math.random();
+        this.power = getRandomPower();
+    }
+
+    public Connection(int sectorNumber, Double power) {
+        this.sectorNumber = sectorNumber;
+        this.power = power;
+    }
+
+    public static Double getRandomPower() {
+        return minPower + (maxPower - minPower) * Math.random();
     }
 }
