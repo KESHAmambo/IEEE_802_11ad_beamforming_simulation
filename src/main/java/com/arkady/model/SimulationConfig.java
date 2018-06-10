@@ -6,6 +6,9 @@ package com.arkady.model;
 public class SimulationConfig {
     public int numberOfMobileStations;
     public int numberOfAccessPoints = 1;
+    // noise power in dB, for 2.16 GHz approximately -42 dB
+    public static int noisePower = 42;
+    public static double minRequiredSnr = 1.5;
 
     public SimulationConfig(int numberOfMobileStations) {
         this.numberOfMobileStations = numberOfMobileStations;

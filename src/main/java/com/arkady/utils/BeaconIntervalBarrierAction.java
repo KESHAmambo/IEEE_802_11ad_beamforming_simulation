@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Thread.sleep;
 
@@ -22,10 +23,11 @@ public class BeaconIntervalBarrierAction implements Runnable {
     public static Map<String, Map<String, Map<Integer, Connection>>> connections=
             new ConcurrentHashMap<>();
 
+    public static volatile AtomicInteger beaconIntervalNumber = new AtomicInteger();
     private boolean firstIterationFlag = true;
 
     public void run() {
-        System.out.println("Barrier started");
+        System.out.println("Barrier started, BI " + beaconIntervalNumber.incrementAndGet());
 
         if(connections.isEmpty()) {
             SimulationService.stations.entrySet().forEach(this::setNewPosition);
@@ -86,7 +88,7 @@ public class BeaconIntervalBarrierAction implements Runnable {
 
         int mostPowerfulSector = chooseMostPowerfulSector(stationANumberOfSectors);
         double mostPowerfulSectorPower = Connection.getRandomPower();
-        System.out.println("Init: " + stationAId +" most powerful sector: " + mostPowerfulSector +
+        System.out.println("Init: " + stationAId + " most powerful sector: " + mostPowerfulSector +
                 " " + mostPowerfulSectorPower);
 
         for(int sectorNumber = 0; sectorNumber < stationANumberOfSectors; sectorNumber++) {

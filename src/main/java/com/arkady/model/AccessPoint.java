@@ -8,6 +8,7 @@ import com.arkady.utils.Constants;
 import com.arkady.utils.Utils;
 
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by abara on 13.05.2018.
@@ -17,6 +18,10 @@ public class AccessPoint extends Station {
     private static final Integer DEFAULT_NUMBER_OF_SECTORS = 8;
 
     private static Integer accessPointCount = 0;
+
+    private volatile long currentSlsEndTime;
+    private volatile String currentSlsPairingStationId;
+    private volatile AtomicBoolean sswFeedbackWasAlreadySent = new AtomicBoolean(true);
 
     public AccessPoint(CyclicBarrier barrier, SimulationService simulationService) {
         super(ACCESS_POINT_ID_PREFIX + accessPointCount, barrier,
@@ -34,24 +39,15 @@ public class AccessPoint extends Station {
         while(!simulationService.ended.get()) {
             beaconIntervalsCount = sendBeacons(beaconIntervalsCount);
 
-            resetSlsSlotsCollisions();
+            // Send ssw feedbacks in each SLS slot where at least one SSW frame was accepted
+            sendSswFeedbacks();
+
+            Utils.waitTillTime(currentBeaconFrame.beaconIntervalEndTime);
 
             awaitBarrier();
         }
 
         System.out.println(getStationId() + " finished");
-    }
-
-    private void resetSlsSlotsCollisions() {
-        for(int slotNumber = 0; slotNumber < BeaconFrame.SLS_SLOTS; slotNumber++) {
-            resetCollisionAfterNextSlsSlot(slotNumber);
-        }
-    }
-
-    private void resetCollisionAfterNextSlsSlot(int slotNumber) {
-        long slsSlotEndTime = currentBeaconFrame.abftStartTime + SswFrame.SLS_SLOT_DURATION * slotNumber;
-        Utils.waitTillTime(slsSlotEndTime);
-        receiving.set(0);
     }
 
     private Integer sendBeacons(Integer beaconIntervalsCount) {
@@ -75,10 +71,15 @@ public class AccessPoint extends Station {
                         sectorNumber,
                         beaconIntervalsCount);
 
+                int finalSectorNumber = sectorNumber;
                 SimulationService.stations.entrySet().stream().filter(entry -> !entry.getKey().equals(getStationId())).forEach(entry -> {
                     Station station = entry.getValue();
                     transmitting.set(true);
-                    station.receiving.incrementAndGet();
+//                    station.receiving.incrementAndGet();
+                    Connection transmitConnection = BeaconIntervalBarrierAction.connections.get(getStationId())
+                            .get(station.getStationId()).get(finalSectorNumber);
+                    CollisionPretender collisionPretender = new CollisionPretender(transmitConnection);
+                    station.collisionPretenders.put(getStationId(), collisionPretender);
                 });
 
                 Utils.waitTillTransmissionEnd(BeaconFrame.SIZE, Constants.CONTROL_PHY_SPEED);
@@ -93,12 +94,27 @@ public class AccessPoint extends Station {
         return beaconIntervalsCount;
     }
 
+    private void sendSswFeedbacks() {
+        for(int slotNumber = 0; slotNumber < BeaconFrame.SLS_SLOTS; slotNumber++) {
+            long sswFeedbackTime = currentBeaconFrame.abftStartTime
+                    + SswFrame.SLS_SLOT_DURATION * slotNumber
+                    + SswFrame.SSW_FEEDBACK_TIME_IN_SLS_SLOT;
+            Utils.waitTillTime(sswFeedbackTime);
+
+            if(!sswFeedbackWasAlreadySent.get()) {
+                sendSswFeedback(currentSlsEndTime, currentSlsPairingStationId);
+            }
+        }
+    }
+
     @Override
     public void receiveSswFrame(SswFrame sswFrame) {
-        if(receiving.get() == 1) {
-            String initiatorStationId = sswFrame.initiatorStationId;
-            Integer initiatorSectorNumber = sswFrame.initiatorSectorNumber;
+        String initiatorStationId = sswFrame.initiatorStationId;
+        Integer initiatorSectorNumber = sswFrame.initiatorSectorNumber;
 
+        boolean snrAcceptable = Utils.isSnrAcceptable(initiatorStationId, collisionPretenders);
+
+        if(snrAcceptable) {
             bestTransmittedConnections.put(initiatorStationId, sswFrame.bestReceivedConnection);
 
             Connection receivedConnection = BeaconIntervalBarrierAction.connections.get(initiatorStationId)
@@ -108,33 +124,39 @@ public class AccessPoint extends Station {
                     || bestReceivedConnections.get(initiatorStationId).power < receivedConnection.power) {
                 bestReceivedConnections.put(initiatorStationId, receivedConnection);
             }
-            receiving.decrementAndGet();
+//            receiving.decrementAndGet();
 
             System.out.println(getStationId() +
                     " received SSW frame: initiator sector " + initiatorSectorNumber +
                     ", power = " + receivedConnection.power);
 
+            currentSlsPairingStationId = initiatorStationId;
+            currentSlsEndTime = sswFrame.slsSlotEndTime;
+            sswFeedbackWasAlreadySent.set(false);
+            /*
             if(sswFrame.lastSector) {
                 sendSswFeedback(sswFrame, initiatorStationId);
-            }
+            }*/
         } else {
-            System.out.println(getStationId() + " receiving collision: " +
-                    sswFrame.initiatorStationId +
-                    " SSW frame from sector " + sswFrame.initiatorSectorNumber);
+            System.out.println(getStationId() + " unacceptable SNR: " +
+                    initiatorStationId +
+                    " SSW frame from sector " + initiatorSectorNumber);
         }
+
+        Utils.clearCollisionPretendersIfChecked(collisionPretenders);
     }
 
-    private void sendSswFeedback(SswFrame sswFrame, String initiatorStationId) {
-        if(Utils.enoughToTransmit(SswFrame.SIZE, sswFrame.slsSlotEndTime, Constants.CONTROL_PHY_SPEED)) {
-            System.out.println(getStationId() + " sends SSW Feedback via: sector " + bestTransmittedConnections.get(initiatorStationId).sectorNumber);
+    private void sendSswFeedback(long slsSlotEndTime, String receivingStationId) {
+        if(Utils.enoughToTransmit(SswFrame.SIZE, slsSlotEndTime, Constants.CONTROL_PHY_SPEED)) {
+            System.out.println(getStationId() + " sends SSW Feedback via: sector " + bestTransmittedConnections.get(receivingStationId).sectorNumber);
 
             SswFrame sswFeedback = new SswFrame(
-                    bestTransmittedConnections.get(initiatorStationId).sectorNumber,
-                    bestReceivedConnections.get(initiatorStationId),
+                    bestTransmittedConnections.get(receivingStationId).sectorNumber,
+                    bestReceivedConnections.get(receivingStationId),
                     getStationId(),
                     false,
-                    sswFrame.slsSlotEndTime);
-            Station receivingStation = SimulationService.stations.get(initiatorStationId);
+                    slsSlotEndTime);
+            Station receivingStation = SimulationService.stations.get(receivingStationId);
 
             transmitting.set(true);
             receivingStation.receiving.incrementAndGet();
@@ -145,7 +167,7 @@ public class AccessPoint extends Station {
             transmitting.set(false);
 
             //Confirmation for the AP transmit connection
-            bestTransmittedConnections.get(initiatorStationId).confirmed.set(true);
+            bestTransmittedConnections.get(receivingStationId).confirmed.set(true);
         }
     }
 

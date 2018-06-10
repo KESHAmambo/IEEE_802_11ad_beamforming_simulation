@@ -3,6 +3,7 @@ package com.arkady.model;
 import com.arkady.simulation.SimulationService;
 import com.arkady.model.frames.BeaconFrame;
 import com.arkady.model.frames.SswFrame;
+import com.arkady.utils.BeaconIntervalBarrier;
 import com.arkady.utils.BeaconIntervalBarrierAction;
 import com.arkady.utils.Constants;
 import com.arkady.utils.Utils;
@@ -57,6 +58,9 @@ public class MobileDevice extends Station {
                 sendSswFrames(false);
             }
 
+            if(currentBeaconFrame != null) {
+                Utils.waitTillTime(currentBeaconFrame.beaconIntervalEndTime);
+            }
             awaitBarrier();
         }
 
@@ -71,7 +75,7 @@ public class MobileDevice extends Station {
 
         System.out.println(getStationId() + " waiting SLS slot " + slotNumber +
                 ": current " + System.currentTimeMillis() +
-                ", sls start " + chosenSlsSlotStartTime + ", sls end " + chosenSlsSlotEndTime);
+                ", slot start " + chosenSlsSlotStartTime + ", slot end " + chosenSlsSlotEndTime);
 
         // Waiting for chosen SLS slot
         Utils.waitTillTime(chosenSlsSlotStartTime);
@@ -99,7 +103,11 @@ public class MobileDevice extends Station {
                     chosenSlsSlotEndTime);
 
             transmitting.set(true);
-            accessPoint.receiving.incrementAndGet();
+            Connection transmitConnection = BeaconIntervalBarrierAction.connections.get(getStationId())
+                    .get(accessPoint.getStationId()).get(sectorNumber);
+            CollisionPretender collisionPretender = new CollisionPretender(transmitConnection);
+            accessPoint.collisionPretenders.put(getStationId(), collisionPretender);
+//            accessPoint.receiving.incrementAndGet();
 
             Utils.waitTillTransmissionEnd(SswFrame.SIZE, Constants.CONTROL_PHY_SPEED);
 
@@ -163,17 +171,13 @@ public class MobileDevice extends Station {
     }
 
     private void waitForNewAbftPeriod() {
-        if(currentBeaconFrame != null) {
-            System.out.println(getStationId() +
-                    " waiting for new A-BFT, current: " + System.currentTimeMillis() +
-                    ", start: " + currentBeaconFrame.abftStartTime +
-                    ", Beacon end: " + currentBeaconFrame.beaconIntervalEndTime);
-        }
-
-        long currentTime = System.currentTimeMillis();
-        while(currentBeaconFrame == null
-                || currentBeaconFrame.abftStartTime > currentTime
-                || currentBeaconFrame.beaconIntervalEndTime < currentTime) {
+        long waitingStartTime = System.currentTimeMillis();
+        long expectedBeaconIntervalEndTime = waitingStartTime + BeaconFrame.BEACON_INTERVAL_DURATION;
+        long currentTime = waitingStartTime;
+        while(expectedBeaconIntervalEndTime > currentTime
+                && (currentBeaconFrame == null
+                    || currentBeaconFrame.beaconIntervalNumber != BeaconIntervalBarrierAction.beaconIntervalNumber.get()
+                    || currentBeaconFrame.abftStartTime > currentTime)) {
             try {
                 sleep(1);
                 currentTime = System.currentTimeMillis();
@@ -192,26 +196,35 @@ public class MobileDevice extends Station {
         Integer initiatorSectorNumber = beaconFrame.sectorNumber;
         int beaconIntervalNumber = beaconFrame.beaconIntervalNumber;
 
-        if(accessPoint == null) {
-            accessPoint = (AccessPoint) SimulationService.stations.get(initiatorStationId);
-            System.out.println(getStationId() + " found access point " + initiatorStationId);
+        boolean snrAcceptable = Utils.isSnrAcceptable(initiatorStationId, collisionPretenders);
+
+        if(snrAcceptable) {
+            if(accessPoint == null) {
+                accessPoint = (AccessPoint) SimulationService.stations.get(initiatorStationId);
+                System.out.println(getStationId() + " found access point " + initiatorStationId);
+            }
+
+            Connection receivedConnection = BeaconIntervalBarrierAction.connections.get(initiatorStationId)
+                    .get(getStationId()).get(initiatorSectorNumber);
+            receivedConnection.beaconIntervalNumber = beaconIntervalNumber;
+
+            Connection bestReceivedConnectionFromInitiator = bestReceivedConnections.get(initiatorStationId);
+            if(!bestReceivedConnections.containsKey(initiatorStationId)
+                    || bestReceivedConnectionFromInitiator.beaconIntervalNumber < beaconIntervalNumber
+                    || bestReceivedConnections.get(initiatorStationId).power < receivedConnection.power) {
+                bestReceivedConnections.put(initiatorStationId, receivedConnection);
+            }
+
+            System.out.println(getStationId() + " received Beacon: sector " + beaconFrame.sectorNumber +
+                    ", power = " + receivedConnection.power);
+
+            currentBeaconFrame = beaconFrame;
+        } else {
+            System.out.println(getStationId() + " unacceptable SNR: " +
+                    initiatorStationId +
+                    " Beacon frame from sector " + initiatorSectorNumber);
         }
 
-        Connection receivedConnection = BeaconIntervalBarrierAction.connections.get(initiatorStationId)
-                .get(getStationId()).get(initiatorSectorNumber);
-        receivedConnection.beaconIntervalNumber = beaconIntervalNumber;
-
-        Connection bestReceivedConnectionFromInitiator = bestReceivedConnections.get(initiatorStationId);
-        if(!bestReceivedConnections.containsKey(initiatorStationId)
-                || bestReceivedConnectionFromInitiator.beaconIntervalNumber < beaconIntervalNumber
-                || bestReceivedConnections.get(initiatorStationId).power < receivedConnection.power) {
-            bestReceivedConnections.put(initiatorStationId, receivedConnection);
-        }
-
-        System.out.println(getStationId() + " received Beacon: sector " + beaconFrame.sectorNumber +
-                ", power = " + receivedConnection.power);
-
-        currentBeaconFrame = beaconFrame;
-        receiving.decrementAndGet();
+        Utils.clearCollisionPretendersIfChecked(collisionPretenders);
     }
 }

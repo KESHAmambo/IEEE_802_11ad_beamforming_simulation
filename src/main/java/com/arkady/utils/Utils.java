@@ -1,6 +1,11 @@
 package com.arkady.utils;
 
+import com.arkady.model.CollisionPretender;
+import com.arkady.model.Connection;
+import com.arkady.model.SimulationConfig;
 import com.arkady.simulation.SimulationService;
+
+import java.util.Map;
 
 import static java.lang.Thread.sleep;
 
@@ -44,6 +49,42 @@ public class Utils {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+
+    public static boolean isSnrAcceptable(String testedStationId, Map<String, CollisionPretender> collisionPretenders) {
+        CollisionPretender testedCollisionPretender = collisionPretenders.get(testedStationId);
+        testedCollisionPretender.checked.set(true);
+
+        double testedStationPower = testedCollisionPretender.connection.power;
+        double otherStationSumPower = 0;
+
+        for(Map.Entry<String, CollisionPretender> entry: collisionPretenders.entrySet()) {
+            if(!entry.getKey().equals(testedStationId)) {
+                otherStationSumPower += entry.getValue().connection.power;
+            }
+        }
+
+        double snr = testedStationPower / (otherStationSumPower + SimulationConfig.noisePower);
+        System.out.println("Collision pretenders: " + collisionPretenders.size() +
+                " " + testedStationId +
+                " SNR: " + snr + " " + (snr > SimulationConfig.minRequiredSnr));
+        return snr > SimulationConfig.minRequiredSnr;
+    }
+
+    public static void clearCollisionPretendersIfChecked(
+            Map<String, CollisionPretender> collisionPretenders) {
+
+        boolean allCollisionPretendersChecked = true;
+        for(Map.Entry<String, CollisionPretender> entry: collisionPretenders.entrySet()) {
+            allCollisionPretendersChecked = entry.getValue().checked.get();
+            if(!allCollisionPretendersChecked) {
+                break;
+            }
+        }
+        if(allCollisionPretendersChecked) {
+            collisionPretenders.clear();
         }
     }
 }

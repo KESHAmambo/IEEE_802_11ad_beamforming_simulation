@@ -21,7 +21,9 @@ public abstract class Station extends Thread {
     public final Integer numberOfSectors;
 
     public AtomicBoolean transmitting = new AtomicBoolean(false);
+    // Number of stations currently transmitting to this station
     public AtomicInteger receiving = new AtomicInteger(0);
+    public Map<String, CollisionPretender> collisionPretenders = new ConcurrentHashMap<>();
 
     public AtomicBoolean positionChanged = new AtomicBoolean(false);
     public volatile BeaconFrame currentBeaconFrame;
