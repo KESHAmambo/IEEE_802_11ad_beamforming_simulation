@@ -158,8 +158,8 @@ public class MobileDevice extends Station {
     }
 
     private long chooseSlsSlot() {
-        double rand = Math.random() * (BeaconFrame.SLS_SLOTS -1);
-        return Math.round(rand);
+        double rand = Math.random() * BeaconFrame.SLS_SLOTS;
+        return (long) Math.floor(rand);
     }
 
     private void waitForNewAbftPeriod() {
