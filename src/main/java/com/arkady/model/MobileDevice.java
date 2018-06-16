@@ -3,11 +3,11 @@ package com.arkady.model;
 import com.arkady.simulation.SimulationService;
 import com.arkady.model.frames.BeaconFrame;
 import com.arkady.model.frames.SswFrame;
-import com.arkady.utils.BeaconIntervalBarrier;
 import com.arkady.utils.BeaconIntervalBarrierAction;
 import com.arkady.utils.Constants;
 import com.arkady.utils.Utils;
 
+import java.util.Map;
 import java.util.concurrent.CyclicBarrier;
 
 /**
@@ -21,6 +21,11 @@ public class MobileDevice extends Station {
 
     private volatile AccessPoint accessPoint;
 
+    public int beaconsCount = 0;
+    private long beaconIntervalStartTime;
+    public volatile double beamformingDuration;
+    public volatile boolean beamformingSuccess;
+
     public MobileDevice(CyclicBarrier barrier, SimulationService simulationService) {
         super(MOBILE_DEVICE_ID_PREFIX + mobileDeviceCount, barrier,
                 simulationService, DEFAULT_NUMBER_OF_SECTORS);
@@ -33,38 +38,44 @@ public class MobileDevice extends Station {
 
         waitFirstBarrierAction();
 
-        Integer count = 0;
         while(!simulationService.ended.get()) {
-            System.out.println(getStationId() + ": BI " + ++count);
+            beaconIntervalStartTime = System.currentTimeMillis();
+            System.out.println(getStationId() + ": BI " + ++beaconsCount);
 
-            waitForNewAbftPeriod();
+            boolean successfullyWaitedForNewAbft = waitForNewAbftPeriod();
 
-            Connection apReceiveConnection = bestReceivedConnections.get(accessPoint.getStationId());
-            Connection apTransmitConnection = bestTransmittedConnections.get(accessPoint.getStationId());
-            if(positionChanged.get()) {
-                //возможно, надо перенести за подтверждение
-                bestTransmittedConnections.clear();
-                accessPoint.bestReceivedConnections.remove(getStationId());
-                positionChanged.set(false);
-                System.out.println(getStationId() + " position changed, sending SSW frames to all sectors");
-                sendSswFrames(true);
-            } else if(apTransmitConnection == null ||
-                    !apTransmitConnection.confirmed.get()) {
-                System.out.println(getStationId() + " unconfirmed connection, sending SSW frames to all sectors");
-                sendSswFrames(true);
-            } else if(!apReceiveConnection.confirmed.get()) {
-                System.out.println(getStationId() +
-                        " unconfirmed AP connection, sending SSW frames to best known 'to AP' transmit sector");
-                sendSswFrames(false);
-            }
+            if(successfullyWaitedForNewAbft) {
+                sendSswFrames();
 
-            if(currentBeaconFrame != null) {
-                Utils.waitTillTime(currentBeaconFrame.beaconIntervalEndTime);
+                if(currentBeaconFrame != null) {
+                    Utils.waitTillTime(currentBeaconFrame.beaconIntervalEndTime);
+                }
             }
             awaitBarrier();
         }
 
         System.out.println(getStationId() + " finished");
+    }
+
+    private void sendSswFrames() {
+        Connection apReceiveConnection = bestReceivedConnections.get(accessPoint.getStationId());
+        Connection apTransmitConnection = bestTransmittedConnections.get(accessPoint.getStationId());
+        if(positionChanged.get()) {
+            //возможно, надо перенести за подтверждение
+            bestTransmittedConnections.clear();
+            accessPoint.bestReceivedConnections.remove(getStationId());
+            positionChanged.set(false);
+            System.out.println(getStationId() + " position changed, sending SSW frames to all sectors");
+            sendSswFrames(true);
+        } else if(apTransmitConnection == null ||
+                !apTransmitConnection.confirmed.get()) {
+            System.out.println(getStationId() + " unconfirmed connection, sending SSW frames to all sectors");
+            sendSswFrames(true);
+        } else if(!apReceiveConnection.confirmed.get()) {
+            System.out.println(getStationId() +
+                    " unconfirmed AP connection, sending SSW frames to best known 'to AP' transmit sector");
+            sendSswFrames(false);
+        }
     }
 
     private void sendSswFrames(Boolean toEachSector) {
@@ -157,6 +168,34 @@ public class MobileDevice extends Station {
 
             //Confirmation for the mobile station transmit connection
             bestTransmitConnection.confirmed.set(true);
+
+            long beamformingEndTime = System.currentTimeMillis();
+            beamformingDuration = (beaconsCount - 1) * BeaconFrame.REAL_BEACON_INTERVAL_DURATION
+                    + (double) (beamformingEndTime - beaconIntervalStartTime) / SimulationService.TIME_SCALE / Constants.SPEED_SCALE;
+            beamformingSuccess = true;
+
+            boolean eachStationSucceeded = true;
+            for (Map.Entry<String, MobileDevice> entry: SimulationService.mobileDevices.entrySet()) {
+                MobileDevice mobileDevice = entry.getValue();
+                if(!mobileDevice.beamformingSuccess) {
+                    eachStationSucceeded = false;
+                    break;
+                }
+            }
+
+            if(eachStationSucceeded) {
+                BeaconIntervalBarrierAction.beamformingSucceeded.set(true);
+/*
+                System.out.println("All Mobile Devices ended beamforming");
+                double beamformingSumTime = 0;
+                for (Map.Entry<String, MobileDevice> entry: SimulationService.mobileDevices.entrySet()) {
+                    MobileDevice mobileDevice = entry.getValue();
+                    beamformingSumTime+= mobileDevice.beamformingDuration;
+                    System.out.println(mobileDevice.getStationId() + " " + mobileDevice.beamformingDuration);
+                }
+                double averageBeamformingTime = beamformingSumTime / SimulationService.mobileDevices.size();
+                System.out.println("Beamforming average time = " + averageBeamformingTime);*/
+            }
         }
     }
 
@@ -170,7 +209,7 @@ public class MobileDevice extends Station {
         return (long) Math.floor(rand);
     }
 
-    private void waitForNewAbftPeriod() {
+    private boolean waitForNewAbftPeriod() {
         long waitingStartTime = System.currentTimeMillis();
         long expectedBeaconIntervalEndTime = waitingStartTime + BeaconFrame.BEACON_INTERVAL_DURATION;
         long currentTime = waitingStartTime;
@@ -186,8 +225,17 @@ public class MobileDevice extends Station {
             }
         }
 
-        System.out.println(getStationId() + " ended waiting for new A-BFT, current: " + System.currentTimeMillis() +
-                ", start: " + currentBeaconFrame.abftStartTime + ", Beacon end: " + currentBeaconFrame.beaconIntervalEndTime);
+        boolean successfullyWaitedForNewAbft = currentTime < expectedBeaconIntervalEndTime;
+        if(successfullyWaitedForNewAbft) {
+            System.out.println(getStationId()
+                    + " ended waiting for new A-BFT, current: " + System.currentTimeMillis() +
+                    ", start: " + currentBeaconFrame.abftStartTime
+                    + ", Beacon end: " + currentBeaconFrame.beaconIntervalEndTime);
+        } else {
+            System.out.println(getStationId() + " have not received Beacon");
+        }
+
+        return successfullyWaitedForNewAbft;
     }
 
     @Override

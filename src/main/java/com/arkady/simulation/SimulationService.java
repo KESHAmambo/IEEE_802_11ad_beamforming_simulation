@@ -32,6 +32,7 @@ public class SimulationService {
     public AtomicBoolean ended = new AtomicBoolean(true);
 
     public static Map<String, Station> stations;
+    public static Map<String, MobileDevice> mobileDevices;
 
     public SimulationConfig getConfig() {
         return config;
@@ -69,6 +70,7 @@ public class SimulationService {
 
     private void createStations(CyclicBarrier barrier) {
         stations = new ConcurrentHashMap<>();
+        mobileDevices = new ConcurrentHashMap<>();
 
         AccessPoint accessPoint = new AccessPoint(barrier, this);
         stations.put(accessPoint.getStationId(), accessPoint);
@@ -77,6 +79,7 @@ public class SimulationService {
         for(int i = 0; i < config.numberOfMobileStations; i++) {
             mobileDevice = new MobileDevice(barrier, this);
             stations.put(mobileDevice.getStationId(), mobileDevice);
+            mobileDevices.put(mobileDevice.getStationId(), mobileDevice);
             mobileDevice.start();
         }
 

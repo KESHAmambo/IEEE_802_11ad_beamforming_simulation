@@ -55,22 +55,31 @@ public class Utils {
 
     public static boolean isSnrAcceptable(String testedStationId, Map<String, CollisionPretender> collisionPretenders) {
         CollisionPretender testedCollisionPretender = collisionPretenders.get(testedStationId);
-        testedCollisionPretender.checked.set(true);
+        try {
+            testedCollisionPretender.checked.set(true);
 
-        double testedStationPower = testedCollisionPretender.connection.power;
-        double otherStationSumPower = 0;
+            double testedStationPower = testedCollisionPretender.connection.power;
 
-        for(Map.Entry<String, CollisionPretender> entry: collisionPretenders.entrySet()) {
-            if(!entry.getKey().equals(testedStationId)) {
-                otherStationSumPower += entry.getValue().connection.power;
+            double otherStationSumPower = 0;
+            for (Map.Entry<String, CollisionPretender> entry : collisionPretenders.entrySet()) {
+                if (!entry.getKey().equals(testedStationId)) {
+                    otherStationSumPower += entry.getValue().connection.power;
+                }
             }
+
+            boolean signalAccepted = testedStationPower
+                    > (SimulationConfig.noisePower - SimulationConfig.acceptableBer + otherStationSumPower);
+
+            System.out.println("Collision pretenders: " + collisionPretenders.size() +
+                    " " + testedStationId +
+                    " signal Accepted: " + signalAccepted);
+
+            return signalAccepted;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-        double snr = testedStationPower / (otherStationSumPower + SimulationConfig.noisePower);
-        System.out.println("Collision pretenders: " + collisionPretenders.size() +
-                " " + testedStationId +
-                " SNR: " + snr + " " + (snr > SimulationConfig.minRequiredSnr));
-        return snr > SimulationConfig.minRequiredSnr;
+        return false;
     }
 
     public static void clearCollisionPretendersIfChecked(

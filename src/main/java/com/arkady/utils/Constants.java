@@ -10,4 +10,6 @@ public class Constants {
 
     // control PHY speed in bytes per real milly second (27500000 bytes / second)
     public static final Integer CONTROL_PHY_SPEED = 27500;
+
+    public static final int SPEED_SCALE = 1000;
 }

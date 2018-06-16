@@ -1,5 +1,6 @@
 package com.arkady.utils;
 
+import com.arkady.model.MobileDevice;
 import com.arkady.simulation.SimulationService;
 import com.arkady.model.Connection;
 import com.arkady.model.Station;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Thread.sleep;
@@ -16,12 +18,17 @@ import static java.lang.Thread.sleep;
  * Created by abara on 27.05.2018.
  */
 public class BeaconIntervalBarrierAction implements Runnable {
-    public static Double MOBILITY_QUOTIENT = 0.2;
+    public static Double MOBILITY_QUOTIENT = 0.0;
     public static Boolean SectorsPowerDistributionIndependent = false;
     public static final double[] adjacentSectorsPowerQuotients = {1, (double) 1 / 3, (double) 1 / 9, (double) 1 / 27};
     
     public static Map<String, Map<String, Map<Integer, Connection>>> connections=
             new ConcurrentHashMap<>();
+
+    public static final int numberOfExperiments = 50;
+    public static volatile AtomicBoolean beamformingSucceeded = new AtomicBoolean(false);
+    public static List<Double> averageBeamformingTimes = new ArrayList<>();
+    public static double maxBeamformingDuration = 0;
 
     public static volatile AtomicInteger beaconIntervalNumber = new AtomicInteger();
     private boolean firstIterationFlag = true;
@@ -29,21 +36,75 @@ public class BeaconIntervalBarrierAction implements Runnable {
     public void run() {
         System.out.println("Barrier started, BI " + beaconIntervalNumber.incrementAndGet());
 
-        if(connections.isEmpty()) {
-            SimulationService.stations.entrySet().forEach(this::setNewPosition);
+        if(beamformingSucceeded.get()) {
+            beamformingSucceeded.set(false);
+
+            System.out.println("Experiment " + averageBeamformingTimes.size());
+            System.out.println("All Mobile Devices ended beamforming");
+            double beamformingSumTime = 0;
+            for (Map.Entry<String, MobileDevice> entry: SimulationService.mobileDevices.entrySet()) {
+                MobileDevice mobileDevice = entry.getValue();
+
+                if(maxBeamformingDuration < mobileDevice.beamformingDuration) {
+                    maxBeamformingDuration = mobileDevice.beamformingDuration;
+                }
+
+                beamformingSumTime+= mobileDevice.beamformingDuration;
+                System.out.println(mobileDevice.getStationId() + " " + mobileDevice.beamformingDuration);
+
+                mobileDevice.beamformingSuccess = false;
+                mobileDevice.beamformingDuration = 0;
+                mobileDevice.beaconsCount = 0;
+            }
+            double averageBeamformingTime = beamformingSumTime / SimulationService.mobileDevices.size();
+            System.out.println("Beamforming average time = " + averageBeamformingTime);
+
+            averageBeamformingTimes.add(averageBeamformingTime);
+
+            if(averageBeamformingTimes.size() == numberOfExperiments) {
+                System.out.println("-----------------------------------------");
+                System.out.println(numberOfExperiments + " EXPERIMENTS ENDED!");
+                double sumAverageTime = 0;
+                for(Double averageTime: averageBeamformingTimes) {
+                    System.out.println(averageTime);
+                    sumAverageTime += averageTime;
+                }
+                double finalAverageTime = sumAverageTime / numberOfExperiments;
+                System.out.println("Final average time for "
+                        + SimulationService.mobileDevices.size() + " mobile devices in "
+                        + numberOfExperiments + " experiments: "
+                        + finalAverageTime);
+                System.out.println("Max beamforming duration: " + maxBeamformingDuration);
+
+                while (true) {
+                    try {
+                        sleep(300000);
+                        System.out.println("Experiment Ended!");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                SimulationService.stations.entrySet().forEach(this::setNewPosition);
+            }
         } else {
-            SimulationService.stations.entrySet().stream()
-                    .filter(entryA -> Math.random() < MOBILITY_QUOTIENT).forEach(this::setNewPosition);
+            if(connections.isEmpty()) {
+                SimulationService.stations.entrySet().forEach(this::setNewPosition);
+            } else {
+                SimulationService.stations.entrySet().stream()
+                        .filter(entryA -> Math.random() < MOBILITY_QUOTIENT || beamformingSucceeded.get())
+                        .forEach(this::setNewPosition);
+            }
         }
 
-        try {
+        /*try {
             if(!firstIterationFlag) {
-                sleep(6000);
+                sleep(4000);
             }
             firstIterationFlag = false;
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
 
         System.out.println("Barrier finished");
         System.out.println();

@@ -6,8 +6,9 @@ import com.arkady.model.frames.Frame;
  * Created by abara on 16.05.2018.
  */
 public class BeaconFrame extends Frame {
-    // beacon interval scaled (102.4 ms in real) 1024000
-    public static final long BEACON_INTERVAL_DURATION = 6000;
+    public static final double REAL_BEACON_INTERVAL_DURATION = 102.4;
+    // beacon interval scaled (102.4 ms in real) 102400 mcs
+    public static final long BEACON_INTERVAL_DURATION = 4000;
     // SIZE in bytes
     public static final int SIZE = 512;
 

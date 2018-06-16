@@ -7,6 +7,7 @@ import com.arkady.utils.BeaconIntervalBarrierAction;
 import com.arkady.utils.Constants;
 import com.arkady.utils.Utils;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -20,7 +21,8 @@ public class AccessPoint extends Station {
     private static Integer accessPointCount = 0;
 
     private volatile long currentSlsEndTime;
-    private volatile String currentSlsPairingStationId;
+    private volatile String currentSlsPairingStationId = "";
+    private volatile AtomicBoolean slsSlotCollision = new AtomicBoolean(false);
     private volatile AtomicBoolean sswFeedbackWasAlreadySent = new AtomicBoolean(true);
 
     public AccessPoint(CyclicBarrier barrier, SimulationService simulationService) {
@@ -102,11 +104,18 @@ public class AccessPoint extends Station {
             Utils.waitTillTime(sswFeedbackTime);
 
             if(!sswFeedbackWasAlreadySent.get()) {
-                sendSswFeedback(currentSlsEndTime, currentSlsPairingStationId);
+                if(!slsSlotCollision.get()) {
+                    sendSswFeedback(currentSlsEndTime, currentSlsPairingStationId);
+                }
+                slsSlotCollision.set(false);
+                currentSlsPairingStationId = "";
+
+                sswFeedbackWasAlreadySent.set(true);
             }
         }
     }
 
+//    private
     @Override
     public void receiveSswFrame(SswFrame sswFrame) {
         String initiatorStationId = sswFrame.initiatorStationId;
@@ -130,6 +139,9 @@ public class AccessPoint extends Station {
                     " received SSW frame: initiator sector " + initiatorSectorNumber +
                     ", power = " + receivedConnection.power);
 
+            if(!(currentSlsPairingStationId.equals(initiatorStationId) || currentSlsPairingStationId.equals(""))) {
+                slsSlotCollision.set(true);
+            }
             currentSlsPairingStationId = initiatorStationId;
             currentSlsEndTime = sswFrame.slsSlotEndTime;
             sswFeedbackWasAlreadySent.set(false);
