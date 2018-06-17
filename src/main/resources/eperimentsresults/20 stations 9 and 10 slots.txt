@@ -1,0 +1,7 @@
+9 slots:
+Final average time for 20 mobile devices in 50 experiments: 200.3971392812
+Max beamforming duration: 716.8003634
+
+10 slots:
+Final average time for 20 mobile devices in 50 experiments: 166.19554
+Max beamforming duration: 614.400321

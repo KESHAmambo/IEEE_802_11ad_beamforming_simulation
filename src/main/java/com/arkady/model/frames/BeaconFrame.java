@@ -14,7 +14,7 @@ public class BeaconFrame extends Frame {
 
     // in micro seconds
     public static final int BTI_DURATION = 3100 / 2;
-    public static final int SLS_SLOTS = 5;
+    public static final int SLS_SLOTS = 9;
     public static final int ABFT_DURATION = SswFrame.SLS_SLOT_DURATION * SLS_SLOTS; //
     public static final int ATI_DURATION = 2000;
 

@@ -1,0 +1,32 @@
+Final average time for 2 mobile devices in 50 experiments: 11.264328340000006
+Max beamforming duration: 102.40033340000001
+
+Final average time for 3 mobile devices in 50 experiments: 27.306993276
+Max beamforming duration: 204.8003272
+
+Final average time for 4 mobile devices in 50 experiments: 44.03232770300001
+Max beamforming duration: 204.80033920000002
+
+Final average time for 6 mobile devices in 50 experiments: 82.26166028266667
+Max beamforming duration: 512.0003394
+
+Final average time for 8 mobile devices in 50 experiments: 110.84832689699996
+Max beamforming duration: 512.0003392
+
+Final average time for 10 mobile devices in 50 experiments: 162.4067267136
+Max beamforming duration: 614.4003270000001
+
+Final average time for 12 mobile devices in 50 experiments: 229.5469938420001
+Max beamforming duration: 614.4003392000001
+
+Final average time for 14 mobile devices in 50 experiments: 296.37518399971435
+Max beamforming duration: 1126.4003392000002
+
+Final average time for 16 mobile devices in 50 experiments: 361.9843270102501
+Max beamforming duration: 1126.4003392000002
+
+Final average time for 18 mobile devices in 50 experiments: 447.94343755866663
+Max beamforming duration: 1433.6003272
+
+Final average time for 20 mobile devices in 50 experiments: 603.3411264754
+Max beamforming duration: 1638.400339
