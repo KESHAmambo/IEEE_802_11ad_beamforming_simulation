@@ -67,8 +67,8 @@ public class Utils {
                 }
             }
 
-            boolean signalAccepted = testedStationPower
-                    > (SimulationConfig.noisePower - SimulationConfig.acceptableBer + otherStationSumPower);
+            double powerRation = testedStationPower / (SimulationConfig.noisePower + otherStationSumPower);
+            boolean signalAccepted = powerRation > SimulationConfig.minPowerRatio;
 
             System.out.println("Collision pretenders: " + collisionPretenders.size() +
                     " " + testedStationId +

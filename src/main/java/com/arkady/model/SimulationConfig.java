@@ -6,10 +6,11 @@ package com.arkady.model;
 public class SimulationConfig {
     public int numberOfMobileStations;
     public int numberOfAccessPoints = 1;
-    // noise power in dB, for 2.16 GHz approximately -42 dB
-    public static int noisePower = 81;
-    public static int acceptableBer = 7;
-    public static double minRequiredSnr = 1.5;
+    // noise power in dB, for 2.16 GHz approximately in linear scale
+    public static double noisePower = 7.9e-9;
+    // calculated from acceptable BER of 7 dB
+    public static double minPowerRatio = 5.0;
+//    public static double minRequiredSnr = 1.5;
 
     public SimulationConfig(int numberOfMobileStations) {
         this.numberOfMobileStations = numberOfMobileStations;

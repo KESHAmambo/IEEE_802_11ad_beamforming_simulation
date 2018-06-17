@@ -7,8 +7,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class Connection {
     // power of signal in db
-    private static final Double minPower = 80.0;
-    private static final Double maxPower = 100.0;
+    private static final Double minPower = 7.9e-3;
+    private static final Double maxPower = 10.0;
 
     public final Double power;
     public final Integer sectorNumber;
