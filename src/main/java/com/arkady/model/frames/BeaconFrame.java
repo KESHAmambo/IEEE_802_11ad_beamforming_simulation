@@ -8,12 +8,12 @@ import com.arkady.model.frames.Frame;
 public class BeaconFrame extends Frame {
     public static final double REAL_BEACON_INTERVAL_DURATION = 102.4;
     // beacon interval scaled (102.4 ms in real) 102400 mcs
-    public static final long BEACON_INTERVAL_DURATION = 4000;
+    public static final long BEACON_INTERVAL_DURATION = 4000 / 2;
     // SIZE in bytes
     public static final int SIZE = 512;
 
     // in micro seconds
-    public static final int BTI_DURATION = 3100;
+    public static final int BTI_DURATION = 3100 / 2;
     public static final int SLS_SLOTS = 4;
     public static final int ABFT_DURATION = SswFrame.SLS_SLOT_DURATION * SLS_SLOTS; //
     public static final int ATI_DURATION = 2000;

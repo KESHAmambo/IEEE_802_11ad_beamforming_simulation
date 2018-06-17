@@ -26,7 +26,7 @@ public class SimulationService {
     /*
     the TIME_SCALE for each time period
      */
-    public static final int TIME_SCALE = 10000;
+    public static final int TIME_SCALE = 10000 / 2;
 
     private SimulationConfig config;
     public AtomicBoolean ended = new AtomicBoolean(true);
