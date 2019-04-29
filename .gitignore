@@ -1,25 +1,14 @@
-/target/
-!.mvn/wrapper/maven-wrapper.jar
+# MAC OS
+.DS_Store
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# developing
+.vscode
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+# python 
+*__pycache__
+sample.egg-info
 
-### NetBeans ###
-/nbproject/private/
-/build/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# Jupyter
+.ipynb_checkpoints
+
+/.idea
