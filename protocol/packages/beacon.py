@@ -15,10 +15,12 @@ class Beacon(Package):
       next_beacon_time,
       a_bft_start,
       sls_slots,
-      sls_slot_duration
+      sls_slot_duration,
+      connections
   ):
     Package.__init__(self, sender, receiver, PACKAGE_TYPE, SIZE, time, send_params)
     self.next_beacon_time = next_beacon_time
     self.a_bft_start = a_bft_start
     self.sls_slots = sls_slots
     self.sls_slot_duration = sls_slot_duration
+    self.connections = connections

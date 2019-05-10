@@ -1,9 +1,21 @@
 from ratracer.utils import vec3d_from_array
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 from protocol.send_params import SendParams
 from random import randrange
-from ratracer.utils import apply_color, verbose
+from ratracer.utils import apply_color, verbose_uncolored
 from inspect import isclass
+from protocol.protocol_params import MIN_SNR
+
+
+def color_snr(snr):
+  color = None
+
+  if snr < MIN_SNR:
+    color = 'red'
+  else:
+    color = 'green'
+
+  return apply_color(color)(snr)
 
 
 class Device:
@@ -19,26 +31,36 @@ class Device:
     self.position = vec3d_from_array(coords)
 
   def consume(self, package):
+    snr = self._calculate_snr(package)
     if not self._check_right_destination(package):
       return
+    elif snr < MIN_SNR:
+      self._log_package_reject(package, snr)
+      return self._custom_reject(package)
     else:
-      self._log_package_consume(package)
-      return self._custom_consume(package)
+      self._log_package_consume(package, snr)
+      return self._custom_consume(package, snr)
 
-  @verbose(color=None)
-  def _log_package_consume(self, package, *, color):
-    package_type = apply_color('turq')(package.package_type)
-    print(self.formatted_id,
-          'consumed', package_type,
-          'from', package.sender.formatted_id,
-          ', collisions:', len(package.collisions))
+  @verbose_uncolored
+  def _log_package_consume(self, package, snr):
+    print(self.formatted_id, 'consumed',
+          ', snr', color_snr(snr))
+
+  @verbose_uncolored
+  def _log_package_reject(self, package, snr):
+    print(self.formatted_id, 'rejected',
+          ', snr', color_snr(snr))
 
   def _check_right_destination(self, package):
     receiver = package.receiver
     return receiver == self or isclass(receiver) and isinstance(self, receiver)
 
   @abstractmethod
-  def _custom_consume(self, package):
+  def _custom_reject(self, package):
+    raise NotImplementedError
+
+  @abstractmethod
+  def _custom_consume(self, package, snr):
     raise NotImplementedError
 
   @abstractmethod
@@ -57,6 +79,6 @@ class Device:
   # TODO: calculate snr properly
   def _calculate_snr(self, package):
     if len(package.collisions) > 0:
-      return randrange(10, 15)
+      return randrange(0, 6)
     else:
-      return randrange(0, 15)
+      return randrange(6, 30)

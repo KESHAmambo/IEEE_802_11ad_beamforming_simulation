@@ -115,6 +115,16 @@ def apply_color(color_str):
     return lambda s: s
   return lambda s: f'\x1b[{color_no}m{s}\x1b[0m'
 
+
+def verbose_uncolored(func):
+  @wraps(func)
+  def wrapper(*args, **kwargs):
+    if not settings['verbosity']:
+      return
+    return func(*args, **kwargs)
+  return wrapper
+
+
 def verbose(color):
   def decorator(func):
     @wraps(func)

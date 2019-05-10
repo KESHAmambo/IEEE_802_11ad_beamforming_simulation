@@ -23,7 +23,7 @@ class PackageQueue:
     next_package = None
 
     for package in self.queue:
-      if next_package is None or package.time < next_package.time:
+      if next_package is None or package.end_time < next_package.end_time:
         next_package = package
 
     self.queue.remove(next_package)
@@ -37,7 +37,7 @@ class PackageQueue:
 
 def check_if_collide(main_package, other_package):
   main_package_end = main_package.time + main_package.size / main_package.send_params.speed
-  other_package_end = main_package.time + main_package.size / main_package.send_params.speed
+  other_package_end = other_package.time + other_package.size / other_package.send_params.speed
 
   if main_package_end - other_package.time > settings['time_precision'] \
       and other_package_end - main_package.time > settings['time_precision']:

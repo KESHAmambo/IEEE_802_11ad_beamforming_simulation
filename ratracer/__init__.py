@@ -1,4 +1,4 @@
 settings = {
-  'verbosity': True,
+  'verbosity': False,
   'vcolored': True,
 }

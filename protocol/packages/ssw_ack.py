@@ -4,7 +4,7 @@ PACKAGE_TYPE = 'SSW Ack'
 SIZE = 16
 
 
-class SectorSweepAck(Package):
+class SswAck(Package):
   def __init__(
       self,
       sender,
