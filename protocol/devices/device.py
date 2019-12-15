@@ -76,7 +76,7 @@ class Device:
       speed
     )
 
-  # TODO: calculate snr properly
+  # TODO: calculate snr properly via ../../ratracer/radio.py module
   def _calculate_snr(self, package):
     if len(package.collisions) > 0:
       return randrange(0, 6)
