@@ -77,7 +77,7 @@ class AntennaPattern:
       self._model = self._dipole
     elif kind == 'sector':
       if sector_width > AntennaPattern.MAX_SECTOR_WIDTH:
-        raise AntennaPattern.InvalidSector('Sector width should be less pi')
+        raise AntennaPattern.InvalidSector('Sector width should be less than Pi')
       self._sector_width = numpy.cos(sector_width / 2)
       self._model = self._sector
     elif kind == 'patch':
@@ -234,9 +234,9 @@ if __name__ == '__main__':
 
   scene = {
     (0,0, 0): (0,0,1),
-    # (0,0,10): (0,0,-1),
-    # (5,0,0): (-1,0,0),
-    # (-5,0,0): (1,0,0),
+    (0,0,10): (0,0,-1),
+    (5,0,0): (-1,0,0),
+    (-5,0,0): (1,0,0),
   }
 
   pattern = AntennaPattern(kind='dipole')
