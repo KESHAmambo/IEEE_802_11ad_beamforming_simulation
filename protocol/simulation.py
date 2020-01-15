@@ -7,39 +7,46 @@ from protocol.package_queue import PackageQueue
 from ratracer.utils import verbose_uncolored
 
 
-ITERATIONS = 100
+ITERATIONS = 30
 
 access_point_config = AccessPointConfig()
 mobile_config = MobileConfig()
 
 initial_access_pint_coords = [0, 0, 0]
+
+# number_of_mobile_stations = 2
+# number_of_mobile_stations = 6
+# number_of_mobile_stations = 10
+# number_of_mobile_stations = 14
+# number_of_mobile_stations = 18
+# number_of_mobile_stations = 20
+number_of_mobile_stations = 22
+
 initial_mobile_coords = [
-  [0, 10, 10],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30],
-  [0, 10, 30]
+  # [0, 10, 10],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
+  # [0, 10, 30],
 ]
+for i in range(number_of_mobile_stations):
+  initial_mobile_coords.append([0, 10, 30])
+
 
 
 def calc_average_connection_time(connections):
