@@ -6,47 +6,52 @@ from protocol.devices.mobile_config import MobileConfig
 from protocol.package_queue import PackageQueue
 from ratracer.utils import verbose_uncolored
 
-
 ITERATIONS = 30
 
 access_point_config = AccessPointConfig()
 mobile_config = MobileConfig()
 
-initial_access_pint_coords = [0, 0, 0]
+initial_access_pint_coords = [0., 0., 0.]
 
-# number_of_mobile_stations = 2
+# number_of_mobile_stations = 1
 # number_of_mobile_stations = 6
 # number_of_mobile_stations = 10
 # number_of_mobile_stations = 14
 # number_of_mobile_stations = 18
 # number_of_mobile_stations = 20
-number_of_mobile_stations = 22
+# number_of_mobile_stations = 22
 
 initial_mobile_coords = [
-  # [0, 10, 10],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
-  # [0, 10, 30],
+  [1., 0., 0.],
+  [2., 0., 0.],
+  [3., 0., 0.],
+  [4., 0., 0.],
+  [5., 0., 0.],
+  [6., 0., 0.],
+  #
+  # [-1., 0., 0.],
+  # [-2., 0., 0.],
+  # [-3., 0., 0.],
+  # [-4., 0., 0.],
+  # [-5., 0., 0.],
+  # [-6., 0., 0.],
+  #
+  # [0., 1., 0.],
+  # [0., 2., 0.],
+  # [0., 3., 0.],
+  # [0., 4., 0.],
+  # [0., 5., 0.],
+  # [0., 6., 0.],
+  #
+  # [0., -1., 0.],
+  # [0., -2., 0.],
+  # [0., -3., 0.],
+  # [0., -4., 0.],
+  # [0., -5., 0.],
+  # [0., -6., 0.],
 ]
-for i in range(number_of_mobile_stations):
-  initial_mobile_coords.append([0, 10, 30])
-
+# for i in range(number_of_mobile_stations):
+#   initial_mobile_coords.append([1, 0, 0])
 
 
 def calc_average_connection_time(connections):
@@ -59,7 +64,7 @@ def calc_average_connection_time(connections):
 
 @verbose_uncolored
 def log_iteration(iteration):
-    print("\nIteration", iteration)
+  print("\nIteration", iteration)
 
 
 def run_simulation(simulation_count):
@@ -99,6 +104,9 @@ def run_simulation(simulation_count):
       package.print()
 
       for device in device_heap.devices:
+        if device == package.sender:
+          continue
+
         new_packages = device.consume(package)
         if new_packages is not None:
           package_queue.update(new_packages)

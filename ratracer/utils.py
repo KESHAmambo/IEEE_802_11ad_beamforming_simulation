@@ -119,7 +119,7 @@ def apply_color(color_str):
 def verbose_uncolored(func):
   @wraps(func)
   def wrapper(*args, **kwargs):
-    if not settings['verbosity']:
+    if not settings['log']:
       return
     return func(*args, **kwargs)
   return wrapper

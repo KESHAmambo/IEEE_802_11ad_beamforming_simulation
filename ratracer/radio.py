@@ -163,12 +163,16 @@ class RFDevice(Movable):
     self._pattern = pattern if pattern else AntennaPattern()
     self._default_an = vec3d(1,0,0)
     self.ant_normal = ant_normal if ant_normal is not None else self._default_an
+    self.ant_normal_magn = numpy.linalg.norm(self.ant_normal)
 
   def __str__(self):
     return f'{self.position}'
 
   def att(self, direction):
-    return self._pattern(numpy.dot(self.ant_normal, direction))
+    dir_magn = numpy.linalg.norm(direction)
+    return self._pattern(
+      numpy.dot(self.ant_normal, direction) / (self.ant_normal_magn * dir_magn)
+    )
 
   def set_pattern(self, pattern):
     self._pattern = pattern
@@ -180,9 +184,9 @@ def build(specs, freq):
 
 class KRayPathloss:
 
-  def __init__(self, scene, frequency=1e9):
+  def __init__(self, tracer, frequency=1e9):
     """ Produce k-ray pathloss model based on the 'scene'. """
-    self._tracer = Tracer(build(scene, frequency))
+    self._tracer = tracer
 
     self._frequency = frequency
     self._wavelen = LIGHT_SPEED / frequency
@@ -199,7 +203,10 @@ class KRayPathloss:
     for dirs, lens, sids, aoas in result.trace:
       length = sum(lens)
       reflectance = reduce(mul, self._r_att(sids, aoas), 1)
-      pattern_att = tx.att(dirs[0]) * rx.att(dirs[-1])
+      first_dir = dirs[0]
+      last_dir = dirs[-1]
+      rx_dir = [-last_dir[0], -last_dir[1], -last_dir[2]]
+      pattern_att = tx.att(first_dir) * rx.att(rx_dir)
       # print('k-ray-pathloss', length, reflectance, pattern_att)
       self._pathloss += self._1ray_pathloss(length, reflectance, pattern_att)
 
@@ -238,11 +245,32 @@ if __name__ == '__main__':
     (5,0,0): (-1,0,0),
     (-5,0,0): (1,0,0),
   }
+  tracer = Tracer(build(scene, 2160e6))
+  pathloss_model = KRayPathloss(tracer, 2160e6)
 
   pattern = AntennaPattern(kind='dipole')
   transmitter = RFDevice(vec(0,0,5), 860e6, pattern=pattern, ant_normal=vec(0,1,0))
   receiver = RFDevice(vec(0,.1,.5), 860e6, pattern=pattern, ant_normal=vec(0,-1,0))
-  pathloss_model = KRayPathloss(scene)
+
   pathloss = pathloss_model(transmitter, receiver, max_reflections=1)
 
+  print(to_log(power(pathloss)))
+
+  # ------
+  freq = 2160e6
+
+  scene = {
+    # (0, 0, 0): (0, 0, 1),
+    # (0, 0, 10): (0, 0, -1),
+    # (5, 0, 0): (-1, 0, 0),
+    # (-5, 0, 0): (1, 0, 0),
+  }
+
+  patternRx = AntennaPattern(kind='sector', sector_width=numpy.pi * 2 / 6)
+  patternTx = AntennaPattern(kind='sector', sector_width=numpy.pi * 2 / 3.9)
+
+  transmitter = RFDevice(vec(0,0,0), freq, pattern=patternTx, ant_normal=vec3d(1, 1, 0))
+  receiver = RFDevice(vec(1,0,0), freq, pattern=patternRx, ant_normal=vec3d(-1, 0, 0))
+
+  pathloss = pathloss_model(transmitter, receiver, max_reflections=1)
   print(to_log(power(pathloss)))

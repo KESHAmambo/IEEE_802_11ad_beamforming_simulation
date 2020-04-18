@@ -1,6 +1,9 @@
 # all transmission speeds are in bytes/seconds
 
 CONTROL_PHY_SPEED = 27500000
-MIN_SNR = 7
+CONTROL_PHY_FREQ = 2160e6
+MIN_SNR = 5.01189
+NOISE_POWER = 7.9e-9
+REFLECTIONS = 1
 
 MAX_SECTORS_FOR_MOBILE = 12

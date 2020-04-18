@@ -1,0 +1,70 @@
+Mobile stations: 2
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 1.8 , time:  184.32000000000002
+Average station time taken to connect: 81.9203173236364
+
+Mobile stations: 4
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 2.9 , time:  296.96
+Average station time taken to connect: 110.08029376000005
+
+(without scene)
+Mobile stations: 6
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 5.1 , time:  522.24
+Average station time taken to connect: 254.29363180606066
+(with scene ref 2)
+Mobile stations: 6
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 4.5 , time:  460.8
+Average station time taken to connect: 199.68030789818187
+(with scene ref 1)
+Mobile stations: 6
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 3.433333333333333 , time:  351.5733333333333
+Average station time taken to connect: 106.38251720404043
+
+Mobile stations: 8
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 5.6 , time:  573.4399999999999
+Average station time taken to connect: 222.72030239999998
+
+Mobile stations: 10
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 6.3 , time:  645.12
+Average station time taken to connect: 273.40829721600005
+
+Mobile stations: 12
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 8.3 , time:  849.9200000000001
+Average station time taken to connect: 364.3736229042423
+
+Mobile stations: 14
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 9.1 , time:  931.84
+Average station time taken to connect: 426.42315920623366
+
+Mobile stations: 16
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 10.5 , time:  1075.2
+Average station time taken to connect: 479.3602984727271
+
+Mobile stations: 18
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 12.8 , time:  1310.7200000000003
+Average station time taken to connect: 621.7958515846465
+
+Mobile stations: 20
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 13.9 , time:  1423.3600000000001
+Average station time taken to connect: 692.7362950167274
+
+Mobile stations: 22
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 17.7 , time:  1812.48
+Average station time taken to connect: 920.6693882393389
+
+Mobile stations: 24
+Sls slots: 3
+Max intervals taken to connect all mobile stations: 18.5 , time:  1894.4
+Average station time taken to connect: 876.800300829091
