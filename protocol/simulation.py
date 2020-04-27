@@ -5,8 +5,19 @@ from protocol.devices.mobile import Mobile
 from protocol.devices.mobile_config import MobileConfig
 from protocol.package_queue import PackageQueue
 from ratracer.utils import verbose_uncolored
+from protocol.pathloss_model import CARRIAGE_HALF_WIDTH
+from random import randrange
 
-ITERATIONS = 30
+ZONE_LENGTH = 4.56
+
+DEVICE_MARGIN = 0.05
+PADDING = 0.05
+MIN_X_COORD = -ZONE_LENGTH
+MAX_X_COORD = 0
+MIN_Y_COORD = -CARRIAGE_HALF_WIDTH + PADDING
+MAX_Y_COORD = CARRIAGE_HALF_WIDTH - PADDING
+
+ITERATIONS = 100
 
 access_point_config = AccessPointConfig()
 mobile_config = MobileConfig()
@@ -14,20 +25,24 @@ mobile_config = MobileConfig()
 initial_access_pint_coords = [0., 0., 0.]
 
 # number_of_mobile_stations = 1
+number_of_mobile_stations = 2
+# number_of_mobile_stations = 4
 # number_of_mobile_stations = 6
 # number_of_mobile_stations = 10
 # number_of_mobile_stations = 14
 # number_of_mobile_stations = 18
 # number_of_mobile_stations = 20
 # number_of_mobile_stations = 22
+# number_of_mobile_stations = 24
+# number_of_mobile_stations = 25
 
 initial_mobile_coords = [
-  [1., 0., 0.],
-  [2., 0., 0.],
-  [3., 0., 0.],
-  [4., 0., 0.],
-  [5., 0., 0.],
-  [6., 0., 0.],
+  # [1., 0., 0.],
+  # [2., 0., 0.],
+  # [3., 0., 0.],
+  # [4., 0., 0.],
+  # [5., 0., 0.],
+  # [6., 0., 0.],
   #
   # [-1., 0., 0.],
   # [-2., 0., 0.],
@@ -50,8 +65,16 @@ initial_mobile_coords = [
   # [0., -5., 0.],
   # [0., -6., 0.],
 ]
-# for i in range(number_of_mobile_stations):
-#   initial_mobile_coords.append([1, 0, 0])
+
+LENGTH = -MIN_X_COORD + MAX_X_COORD
+WIDTH = -MIN_Y_COORD + MAX_Y_COORD
+MARGINS_IN_LENGTH = LENGTH // DEVICE_MARGIN
+MARGINS_IN_WIDTH = WIDTH // DEVICE_MARGIN
+
+for i in range(number_of_mobile_stations):
+  x = DEVICE_MARGIN * randrange(0, MARGINS_IN_LENGTH) + MIN_X_COORD
+  y = DEVICE_MARGIN * randrange(0, MARGINS_IN_WIDTH) + MIN_Y_COORD
+  initial_mobile_coords.append([x, y, 0])
 
 
 def calc_average_connection_time(connections):
