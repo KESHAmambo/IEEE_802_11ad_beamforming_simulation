@@ -12,7 +12,7 @@ class AccessPointConfig(DeviceConfig):
     self.sectors = 12
     self.beacon_interval = 102.4
     self.a_bft_start = self.sectors * BEACON_SIZE / CONTROL_PHY_SPEED
-    self.sls_slots = 10
+    self.sls_slots = 3
 
     sls_slot_data_size = MAX_SECTORS_FOR_MOBILE * (RESPONDER_SSW_SIZE \
                          + SSW_FEEDBACK_SIZE \
