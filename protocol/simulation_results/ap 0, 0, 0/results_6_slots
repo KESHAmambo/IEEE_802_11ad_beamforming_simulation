@@ -62,3 +62,9 @@ Mobile stations: 25
 Sls slots: 6
 Max intervals taken to connect all mobile stations: 7.77 , time:  795.648
 Average station time taken to connect: 324.2807119481018
+
+
+Mobile stations: 50
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 22.5 , time:  2304.0
+Average station time taken to connect: 1243.9555855639276
