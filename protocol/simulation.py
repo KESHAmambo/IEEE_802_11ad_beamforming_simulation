@@ -19,10 +19,18 @@ MAX_X_COORD = 0
 MIN_Y_COORD = -CARRIAGE_HALF_WIDTH + PADDING
 MAX_Y_COORD = CARRIAGE_HALF_WIDTH - PADDING
 
-ITERATIONS = 100
 
-access_point_config = AccessPointConfig()
+ITERATIONS = 100
+SLS_SLOTS = 6
+initial_access_pint_coords = [
+  0,
+  0,
+  0.
+]
+
+access_point_config = AccessPointConfig(SLS_SLOTS)
 mobile_config = MobileConfig()
+
 
 LENGTH = -MIN_X_COORD + MAX_X_COORD
 WIDTH = -MIN_Y_COORD + MAX_Y_COORD
@@ -44,13 +52,12 @@ def log_iteration(iteration):
 
 
 def run_simulation(simulation_count, initial_mobile_coords):
-  if simulation_count % 10 == 0:
+  if simulation_count % (ITERATIONS / 10) == 0:
     print('--- Simulation run --- (', simulation_count, '/', ITERATIONS, ')')
 
   package_queue = PackageQueue()
   device_heap = DeviceHeap()
 
-  initial_access_pint_coords = [0., 0., 0.]
   access_point = AccessPoint(initial_access_pint_coords, access_point_config)
   device_heap.add_access_point(access_point)
 
@@ -112,6 +119,7 @@ def run_simulation_series(number_of_mobile_stations):
   average_connect_time = sum_average_connect_time / ITERATIONS
 
   print('\nMobile stations:', len(initial_mobile_coords))
+  print('AP position', initial_access_pint_coords)
   print('Sls slots:', access_point_config.sls_slots)
   print('Max intervals taken to connect all mobile stations:', average_intervals_count,
         ', time: ', average_intervals_count * access_point_config.beacon_interval)
@@ -119,17 +127,6 @@ def run_simulation_series(number_of_mobile_stations):
 
 
 if __name__ == '__main__':
-  # number_of_mobile_stations = 1
-  # number_of_mobile_stations = 2
-  # number_of_mobile_stations = 4
-  # number_of_mobile_stations = 6
-  # number_of_mobile_stations = 10
-  # number_of_mobile_stations = 14
-  # number_of_mobile_stations = 18
-  # number_of_mobile_stations = 20
-  # number_of_mobile_stations = 22
-  # number_of_mobile_stations = 24
-  # number_of_mobile_stations = 25
 
   run_simulation_series(1)
   run_simulation_series(2)

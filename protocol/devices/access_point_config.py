@@ -7,12 +7,12 @@ from protocol.protocol_params import CONTROL_PHY_SPEED, MAX_SECTORS_FOR_MOBILE
 
 
 class AccessPointConfig(DeviceConfig):
-  def __init__(self):
+  def __init__(self, sls_slots):
     DeviceConfig.__init__(self)
     self.sectors = 12
     self.beacon_interval = 102.4
     self.a_bft_start = self.sectors * BEACON_SIZE / CONTROL_PHY_SPEED
-    self.sls_slots = 6
+    self.sls_slots = sls_slots
 
     sls_slot_data_size = MAX_SECTORS_FOR_MOBILE * (RESPONDER_SSW_SIZE \
                          + SSW_FEEDBACK_SIZE \

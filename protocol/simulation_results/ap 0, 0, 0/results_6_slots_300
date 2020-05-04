@@ -1,0 +1,64 @@
+Mobile stations: 1
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 1.0 , time:  102.4
+Average station time taken to connect: 0.00037659927272727195
+
+
+Mobile stations: 2
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 1.1933333333333334 , time:  122.19733333333335
+Average station time taken to connect: 9.899060755393942
+
+
+Mobile stations: 4
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 1.8366666666666667 , time:  188.07466666666667
+Average station time taken to connect: 36.26705829430303
+
+
+Mobile stations: 6
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 2.3466666666666667 , time:  240.2986666666667
+Average station time taken to connect: 52.67950429220205
+
+
+Mobile stations: 10
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 3.29 , time:  336.896
+Average station time taken to connect: 89.36145836761206
+
+
+Mobile stations: 14
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 4.45 , time:  455.68000000000006
+Average station time taken to connect: 148.33410882327289
+
+
+Mobile stations: 18
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 5.3533333333333335 , time:  548.1813333333333
+Average station time taken to connect: 192.5313557949629
+
+
+Mobile stations: 20
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 5.96 , time:  610.304
+Average station time taken to connect: 222.82279283199998
+
+
+Mobile stations: 22
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 7.31 , time:  748.544
+Average station time taken to connect: 291.96451339671626
+
+
+Mobile stations: 24
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 8.526666666666667 , time:  873.1306666666668
+Average station time taken to connect: 396.288393434182
+
+
+Mobile stations: 25
+Sls slots: 6
+Max intervals taken to connect all mobile stations: 8.446666666666667 , time:  864.9386666666668
+Average station time taken to connect: 384.0140464543803
