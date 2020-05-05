@@ -35,6 +35,8 @@ def get_ant_gain_based_on_sectors(sectors):
     return 14.0
   if sectors == 24:
     return 20.5
+  else:
+    raise NotImplementedError('The number of sectors is not supported', sectors)
 
 
 RX_ANT_PATTERN = AntennaPattern(kind='isotropic')

@@ -21,7 +21,7 @@ MAX_Y_COORD = CARRIAGE_HALF_WIDTH - PADDING
 
 
 ITERATIONS = 100
-SLS_SLOTS = 10
+SLS_SLOTS = 6
 initial_access_pint_coords = [
   0,
   0,

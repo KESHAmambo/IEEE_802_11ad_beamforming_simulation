@@ -1,0 +1,49 @@
+AP position [0, 0, 0.0]
+AP sectors 12
+Mob sectors: 8
+Sls slots: 6
+
+
+Mobile stations: 1
+Max intervals taken to connect all mobile stations: 1.0 , time:  102.4
+Average station time taken to connect: 0.00041523199999999997
+
+
+Mobile stations: 2
+Max intervals taken to connect all mobile stations: 1.08 , time:  110.59200000000001
+Average station time taken to connect: 6.14439481018182
+
+
+Mobile stations: 4
+Max intervals taken to connect all mobile stations: 1.89 , time:  193.536
+Average station time taken to connect: 42.75240219345456
+
+
+Mobile stations: 6
+Max intervals taken to connect all mobile stations: 2.44 , time:  249.856
+Average station time taken to connect: 61.781732018424265
+
+
+Mobile stations: 10
+Max intervals taken to connect all mobile stations: 3.75 , time:  384.0
+Average station time taken to connect: 125.13320033978184
+
+
+Mobile stations: 14
+Max intervals taken to connect all mobile stations: 5.09 , time:  521.216
+Average station time taken to connect: 183.29639997174033
+
+
+Mobile stations: 18
+Max intervals taken to connect all mobile stations: 6.63 , time:  678.912
+Average station time taken to connect: 265.6715110878384
+
+
+Mobile stations: 22
+Max intervals taken to connect all mobile stations: 8.57 , time:  877.5680000000001
+Average station time taken to connect: 363.194582940562
+
+
+Mobile stations: 25
+Max intervals taken to connect all mobile stations: 9.76 , time:  999.424
+Average station time taken to connect: 433.6439225390544
