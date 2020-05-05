@@ -24,7 +24,7 @@ ITERATIONS = 100
 SLS_SLOTS = 6
 initial_access_pint_coords = [
   0,
-  0,
+  MIN_Y_COORD,
   0.
 ]
 
