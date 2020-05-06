@@ -158,8 +158,10 @@ if __name__ == '__main__':
   run_simulation_series(10)
   run_simulation_series(14)
   run_simulation_series(18)
-  run_simulation_series(22)
-  run_simulation_series(25)
+  # run_simulation_series(22)
+  # run_simulation_series(25)
+
+  # run_simulation_series(35)
 
   # run_simulation_series(50)
 
