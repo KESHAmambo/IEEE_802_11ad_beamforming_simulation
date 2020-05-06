@@ -23,8 +23,8 @@ MAX_Y_COORD = CARRIAGE_HALF_WIDTH - PADDING
 ITERATIONS = 100
 SLS_SLOTS = 6
 initial_access_pint_coords = [
-  MIN_X_COORD,
-  MIN_Y_COORD,
+  0,
+  0,
   0.
 ]
 
@@ -151,12 +151,12 @@ if __name__ == '__main__':
   print('Sls slots:', access_point_config.sls_slots)
   print('\n')
 
-  run_simulation_series(1)
-  run_simulation_series(2)
-  run_simulation_series(4)
-  run_simulation_series(6)
-  run_simulation_series(10)
-  run_simulation_series(14)
+  # run_simulation_series(1)
+  # run_simulation_series(2)
+  # run_simulation_series(4)
+  # run_simulation_series(6)
+  # run_simulation_series(10)
+  # run_simulation_series(14)
   run_simulation_series(18)
   # run_simulation_series(22)
   # run_simulation_series(25)
