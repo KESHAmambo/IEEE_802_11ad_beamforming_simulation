@@ -16,7 +16,6 @@ m = np.array(maxArr)
 
 
 sns.set(style="white", palette="muted", color_codes=True)
-rs = np.random.RandomState(10)
 
 f, axes = plt.subplots(2, 1, figsize=(7, 7))
 # sns.despine(left=True)
