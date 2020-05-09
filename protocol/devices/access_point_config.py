@@ -1,20 +1,17 @@
 from protocol.devices.device_config import DeviceConfig
 from protocol.packages.beacon import SIZE as BEACON_SIZE
-from protocol.packages.responder_sector_sweep import SIZE as RESPONDER_SSW_SIZE
-from protocol.packages.ssw_ack import SIZE as SSW_ACK_SIZE
-from protocol.packages.ssw_feedback import SIZE as SSW_FEEDBACK_SIZE
-from protocol.protocol_params import CONTROL_PHY_SPEED, MAX_SECTORS_FOR_MOBILE
+from protocol.protocol_params import CONTROL_PHY_SPEED, SLS_SLOT_DURATION
 
 
 class AccessPointConfig(DeviceConfig):
-  def __init__(self, sls_slots):
+  def __init__(self, sls_slots, sls_dynamic_mode, sls_degree_adjust):
     DeviceConfig.__init__(self)
     self.sectors = 12
     self.beacon_interval = 102.4
     self.a_bft_start = self.sectors * BEACON_SIZE / CONTROL_PHY_SPEED
     self.sls_slots = sls_slots
+    self.sls_dynamic_mode = sls_dynamic_mode
+    self.sls_slots_base = sls_slots
+    self.sls_degree_adjust = sls_degree_adjust
 
-    sls_slot_data_size = MAX_SECTORS_FOR_MOBILE * (RESPONDER_SSW_SIZE \
-                         + SSW_FEEDBACK_SIZE \
-                         + SSW_ACK_SIZE)
-    self.sls_slot_duration = sls_slot_data_size / CONTROL_PHY_SPEED
+    self.sls_slot_duration = SLS_SLOT_DURATION

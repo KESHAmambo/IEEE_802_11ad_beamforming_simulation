@@ -25,9 +25,17 @@ class AccessPoint(Device):
   def __init__(self, coords, config):
     Device.__init__(self, DEVICE_TYPE, next(self._id_count), COLOR, coords, config)
     self.connections = dict()
+    self.sls_interferences = dict()
+    self.sls_slots_degree = 1
+    self.sls_slots_history = []
 
   def send_beacons(self, current_time):
     self._clear_not_acked_connections()
+
+    if self.config.sls_dynamic_mode:
+      self._update_sls_slots()
+
+    self.sls_slots_history.append(self.config.sls_slots)
 
     beacons = []
 
@@ -59,17 +67,59 @@ class AccessPoint(Device):
     for device_id in not_acked_connections:
       self.connections.pop(device_id)
 
+  def _update_sls_slots(self):
+    sls_degree_adjust = self.config.sls_degree_adjust
+    next_degree = self.sls_slots_degree
+
+    checked_slots = set()
+
+    for sls_slot, interference in self.sls_interferences.items():
+      switcher = {
+        0: -sls_degree_adjust,
+        1: 0,
+        2: sls_degree_adjust,
+      }
+      adjust = switcher.get(interference)
+
+      if adjust is None:
+        raise AssertionError('SLS slot interference value could not be', interference)
+
+      next_degree += adjust
+
+      checked_slots.add(sls_slot)
+
+    for sls_slot in checked_slots:
+      self.sls_interferences.pop(sls_slot)
+
+    if next_degree > 1:
+      self.sls_slots_degree = next_degree
+    else:
+      self.sls_slots_degree = 1
+
+    self.config.sls_slots = round(self.config.sls_slots_base ** self.sls_slots_degree)
+
+    for i in range(self.config.sls_slots):
+      self.sls_interferences[i] = 0
+
   def _get_antenna_params(self, sector):
     return {"sector": sector}  # TODO: return antenna params based on antenna configuration for this sector
 
   def _custom_consume(self, package, snr):
     if isinstance(package, ResponderSectorSweep):
+      if self.config.sls_dynamic_mode:
+        if self.sls_interferences.get(package.sls_slot) == 0:
+          self.sls_interferences[package.sls_slot] = 1
+
       return self._process_responder_sector_sweep(package, snr)
     elif isinstance(package, SswAck):
       return self._process_ssw_ack(package)
 
   def _custom_reject(self, package):
     if isinstance(package, ResponderSectorSweep):
+      if self.config.sls_dynamic_mode:
+        if len(package.collisions) >= 1:
+          self.sls_interferences[package.sls_slot] = 2
+
       return self._send_ssw_feedback(package)
 
   def _process_ssw_ack(self, package):
