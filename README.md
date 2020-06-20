@@ -1,2 +1,1 @@
-# pyradiotracer
-pyradiotracer is a library for performing radio ray tracing.
+IEEE 802.11ad beamforming simulation (SLS phase only)
